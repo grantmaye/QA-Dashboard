@@ -6,6 +6,8 @@ A small website quality workflow: scan a site, inspect the evidence, assign a fi
 
 The default demo works offline against deliberately imperfect sample HTML. It needs no API keys or database account. Sample scan history is seeded demonstration data, not historical monitoring of real businesses.
 
+![Inspect dashboard with website cards and issue inbox](docs/images/dashboard.png)
+
 ## Run locally
 
 Use Node.js 22 or newer.

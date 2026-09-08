@@ -59,7 +59,7 @@ test('scan, triage, persistence, filtering and history', async ({ page }, info) 
   const add = page.getByRole('dialog', { name: 'Add website' });
   await add.getByLabel('Name', { exact: true }).fill('Portfolio');
   await add.getByLabel('Website URL').fill('https://portfolio.example');
-  await add.getByRole('button', { name: 'Add website' }).click();
+  await add.getByRole('button', { name: 'Add website', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Portfolio', exact: true })).toBeVisible();
   if (info.project.name === 'desktop') {
     await page.getByLabel('Demo role').selectOption('VIEWER');
