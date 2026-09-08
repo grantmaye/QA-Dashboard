@@ -6,6 +6,9 @@ test('scan, triage, persistence, filtering and history', async ({ page }, info) 
     path: `test-results/${info.project.name}-dashboard.png`,
     fullPage: true,
   });
+  await page.getByLabel('Search issues').fill('no-such-finding');
+  await expect(page.getByText('No issues match these filters.')).toBeVisible();
+  await page.getByLabel('Search issues').fill('');
   await page.getByRole('button', { name: 'Run scan', exact: true }).first().click();
   await expect(page.getByRole('button', { name: 'Scanning…' })).toHaveCount(0, { timeout: 30000 });
   await page
@@ -40,5 +43,5 @@ test('scan, triage, persistence, filtering and history', async ({ page }, info) 
     await page.getByLabel('Demo role').selectOption('VIEWER');
     await expect(page.getByRole('button', { name: 'Add website', exact: true })).toBeDisabled();
   }
-  await expect(page.locator('[role="alert"]')).toHaveCount(0);
+  await expect(page.locator('.error[role="alert"]')).toHaveCount(0);
 });

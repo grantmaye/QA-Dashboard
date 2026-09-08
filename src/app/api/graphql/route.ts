@@ -14,7 +14,10 @@ export async function POST(request: NextRequest) {
   if (!request.headers.get('content-type')?.startsWith('application/json'))
     return NextResponse.json({ error: 'Use application/json.' }, { status: 415 });
   const origin = request.headers.get('origin');
-  if (origin && origin !== request.nextUrl.origin)
+  // Next may normalize its internal URL to localhost; Host is the browser-facing authority.
+  const expectedOrigin =
+    process.env.APP_ORIGIN || `${request.nextUrl.protocol}//${request.headers.get('host')}`;
+  if (origin && origin !== expectedOrigin)
     return NextResponse.json({ error: 'Cross-origin requests are not allowed.' }, { status: 403 });
   const raw = await request.text();
   if (raw.length > 16000)

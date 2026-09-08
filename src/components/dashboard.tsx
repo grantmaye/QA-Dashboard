@@ -33,6 +33,41 @@ export default function Dashboard() {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(''),
     [live, setLive] = useState(false);
+  const dialogOpen = Boolean(selected) || adding;
+  useEffect(() => {
+    if (!dialogOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
+    const controls = () =>
+      Array.from(
+        dialog?.querySelectorAll<HTMLElement>(
+          'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)',
+        ) ?? [],
+      );
+    controls()[0]?.focus();
+    const handle = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelected(null);
+        setAdding(false);
+      }
+      if (event.key !== 'Tab') return;
+      const items = controls();
+      const first = items[0];
+      const last = items.at(-1);
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    document.addEventListener('keydown', handle);
+    return () => {
+      document.removeEventListener('keydown', handle);
+      previous?.focus();
+    };
+  }, [dialogOpen]);
   const refresh = useCallback(async () => {
     const result = await getWorkspace(role);
     setData(result.dashboard);
@@ -593,7 +628,7 @@ export default function Dashboard() {
             >
               <label>
                 Name
-                <input name="name" required maxLength={80} placeholder="My portfolio" />
+                <input name="name" required maxLength={60} placeholder="My portfolio" />
               </label>
               <label>
                 Website URL
