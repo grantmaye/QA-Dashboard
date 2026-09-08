@@ -170,7 +170,7 @@ export default function Dashboard() {
             Workspace <ChevronRight size={14} /> <strong>{tab}</strong>
           </span>
           <span className="header-right">
-            <span className="status-dot" /> System ready <span className="avatar">GB</span>
+            <span className="status-dot" /> System ready <span className="avatar">GM</span>
           </span>
         </header>
         <main>
@@ -526,6 +526,11 @@ export default function Dashboard() {
             </button>
             <div className="eyebrow">ISSUE DETAILS</div>
             <h2>{selected.title}</h2>
+            {error && (
+              <p role="alert" className="error">
+                {error}
+              </p>
+            )}
             <p className="break">{selected.pageUrl}</p>
             <span className={`priority ${selected.severity.toLowerCase()}`}>
               {selected.severity.toLowerCase()} priority
@@ -612,6 +617,11 @@ export default function Dashboard() {
               <X size={20} />
             </button>
             <h2>Add a website</h2>
+            {error && (
+              <p role="alert" className="error">
+                {error}
+              </p>
+            )}
             <p>Use a .example address for an offline sample.</p>
             <form
               onSubmit={async (e) => {

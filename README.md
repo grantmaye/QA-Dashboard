@@ -4,7 +4,7 @@
 
 A small website quality workflow: scan a site, inspect the evidence, assign a finding, and track it across later scans. Built with **Next.js, TypeScript, Node.js, Apollo GraphQL, and PostgreSQL**.
 
-The default demo works offline against deliberately imperfect sample HTML. It needs no shipping services, API keys, or database account. Sample scan history is seeded demonstration data, not historical monitoring of real businesses.
+The default demo works offline against deliberately imperfect sample HTML. It needs no API keys or database account. Sample scan history is seeded demonstration data, not historical monitoring of real businesses.
 
 ## Run locally
 
