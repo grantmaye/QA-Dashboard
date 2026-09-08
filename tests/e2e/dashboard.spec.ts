@@ -9,7 +9,29 @@ test('scan, triage, persistence, filtering and history', async ({ page }, info) 
   await page.getByLabel('Search issues').fill('no-such-finding');
   await expect(page.getByText('No issues match these filters.')).toBeVisible();
   await page.getByLabel('Search issues').fill('');
+  const queuedResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/graphql') &&
+      response.request().postData()?.includes('mutation Scan') === true,
+  );
   await page.getByRole('button', { name: 'Run scan', exact: true }).first().click();
+  const queued = await (await queuedResponse).json();
+  expect(queued.errors).toBeUndefined();
+  const scanId = queued.data.startScan.id;
+  await expect
+    .poll(
+      async () => {
+        const response = await page.request.post('/api/graphql', {
+          data: { query: '{ dashboard { scans { id status } } }' },
+        });
+        const result = await response.json();
+        return result.data.dashboard.scans.find(
+          (scan: { id: string; status: string }) => scan.id === scanId,
+        )?.status;
+      },
+      { timeout: 20000 },
+    )
+    .toBe('COMPLETED');
   await expect(page.getByRole('button', { name: 'Scanning…' })).toHaveCount(0, { timeout: 30000 });
   await page
     .getByRole('button', { name: /Inspect / })

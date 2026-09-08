@@ -561,6 +561,7 @@ export default function Dashboard() {
               <label>
                 Status
                 <select
+                  aria-label="Status"
                   value={selected.status}
                   disabled={role === 'VIEWER'}
                   onChange={(e) =>
@@ -577,6 +578,7 @@ export default function Dashboard() {
               <label>
                 Assignee
                 <select
+                  aria-label="Assignee"
                   value={selected.assigneeId ?? ''}
                   disabled={role === 'VIEWER'}
                   onChange={(e) => setSelected({ ...selected, assigneeId: e.target.value || null })}
