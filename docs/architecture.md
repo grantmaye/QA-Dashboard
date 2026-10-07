@@ -35,3 +35,9 @@ The UI loads at most 100 recent scans; retention keeps roughly 30 terminal scans
 Issue.assignee uses a request-local DataLoader. The batch query fetches all requested member IDs within the workspace, then maps results back to input order. Missing members return null. The loader deduplicates repeated IDs and does not share results between requests or workspaces.
 
 The benchmark uses the same schema, seed, and operation twice. A naive resolver makes 30 member queries for 30 issues; the batched resolver makes one. The benchmark does not count dashboard SQL, measure network latency, or prove a throughput improvement under load. Run it yourself with npm run benchmark.
+
+## Campaign release inspection
+
+The separate `/preflight` workspace reuses the durable job queue and database adapter. Its `PREFLIGHT` jobs contain a versioned fixed/broken fixture input and persist browser-observed evidence independently of website findings. Website dashboard queries and retention filter by `WEBSITE`; preflight retains its own last 30 runs. Existing website data survives the additive schema upgrade.
+
+See [campaign preflight](campaign-preflight.md) for the controlled Chromium runner, event contract, consent cases, queue behavior, and design limits. The browser executes only checked-in fixtures; live website scanning continues to use the existing bounded HTML transport.

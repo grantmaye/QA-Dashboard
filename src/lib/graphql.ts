@@ -9,6 +9,14 @@ export const typeDefs = `#graphql
   enum IssueStatus { OPEN IN_PROGRESS RESOLVED IGNORED }
   enum SiteMode { DEMO LIVE }
   enum ScanStatus { QUEUED RUNNING COMPLETED FAILED }
+  enum FixtureVariant { BROKEN FIXED }
+  enum PreflightVerdict { BLOCKED READY }
+  type PreflightInput { variant: FixtureVariant!, fixtureVersion: String!, retryOf: ID }
+  type Observation { sequence: Int!, elapsedMs: Int!, consent: Boolean!, kind: String!, name: String!, payload: String! }
+  type Gate { id: String!, title: String!, passed: Boolean!, evidence: String!, sequences: [Int!]! }
+  type PreflightResult { verdict: PreflightVerdict!, fixtureVersion: String!, policyVersion: String!, browserVersion: String!, evidenceHash: String!, durationMs: Int!, timeline: [Observation!]!, gates: [Gate!]! }
+  type PreflightRun { id: ID!, status: ScanStatus!, createdAt: String!, completedAt: String, error: String, attempt: Int!, input: PreflightInput!, preflight: PreflightResult }
+  input StartPreflightInput { variant: FixtureVariant!, retryOf: ID }
   type Member { id: ID!, name: String!, initials: String! }
   type Site { id: ID!, name: String!, url: String!, mode: SiteMode!, createdAt: String! }
   type Finding { fingerprint: ID!, rule: String!, severity: Severity!, title: String!, pageUrl: String!, target: String!, evidence: String!, recommendation: String! }
@@ -20,10 +28,10 @@ export const typeDefs = `#graphql
   type IssueEdge { cursor: String!, node: Issue! }
   type PageInfo { endCursor: String, hasNextPage: Boolean! }
   type IssueConnection { edges: [IssueEdge!]!, pageInfo: PageInfo! }
-  type Query { dashboard: Dashboard!, issues(first: Int = 20, after: String, siteId: ID): IssueConnection!, currentRole: Role!, liveScansEnabled: Boolean! }
+  type Query { preflightRuns: [PreflightRun!]!, dashboard: Dashboard!, issues(first: Int = 20, after: String, siteId: ID): IssueConnection!, currentRole: Role!, liveScansEnabled: Boolean! }
   input SiteInput { name: String!, url: String!, mode: SiteMode! }
   input TriageInput { status: IssueStatus!, assigneeId: ID, note: String! }
-  type Mutation { addSite(input: SiteInput!): Site!, startScan(siteId: ID!): Scan!, updateIssue(id: ID!, input: TriageInput!): Issue! }
+  type Mutation { startPreflight(input: StartPreflightInput!): PreflightRun!, addSite(input: SiteInput!): Site!, startScan(siteId: ID!): Scan!, updateIssue(id: ID!, input: TriageInput!): Issue! }
 `;
 export type Context = {
   service: QaService;
@@ -73,6 +81,8 @@ export function createApi() {
     includeStacktraceInErrorResponses: false,
     resolvers: {
       Query: {
+        preflightRuns: (_: unknown, __: unknown, c: Context) =>
+          c.service.preflightRuns(c.workspace),
         dashboard: (_: unknown, __: unknown, c: Context) => c.service.dashboard(c.workspace),
         currentRole: (_: unknown, __: unknown, c: Context) => c.role,
         liveScansEnabled: () => process.env.ENABLE_LIVE_SCANS === 'true',
@@ -101,6 +111,8 @@ export function createApi() {
         },
       },
       Mutation: {
+        startPreflight: (_: unknown, { input }: { input: unknown }, c: Context) =>
+          c.service.enqueuePreflight(c.workspace, c.role, input),
         addSite: (_: unknown, { input }: { input: unknown }, c: Context) =>
           c.service.addSite(c.workspace, c.role, input),
         startScan: (_: unknown, { siteId }: { siteId: string }, c: Context) =>

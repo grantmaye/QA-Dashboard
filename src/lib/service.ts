@@ -1,3 +1,10 @@
+import {
+  FIXTURE_VERSION,
+  type PreflightInput,
+  type PreflightResult,
+  type PreflightRun,
+} from './preflight/model';
+import { runPreflight } from './preflight/runner';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { Database, Sql } from './database';
@@ -15,10 +22,13 @@ import {
 import { validateUrl, publicTransport } from './transport';
 import { scanWebsite } from './scanner';
 import { demoTransport } from './fixtures';
-const scanSelect = `id,site_id AS "siteId",status,created_at::text AS "createdAt",completed_at::text AS "completedAt",result,error,attempt`;
+const scanSelect = `id,site_id AS "siteId",status,created_at::text AS "createdAt",completed_at::text AS "completedAt",result,error,attempt,kind,input,preflight`;
 export function requireEditor(role: Role) {
   if (role === 'VIEWER')
-    throw new QaError('Viewer mode cannot change sites, scans, or issues.', 'FORBIDDEN');
+    throw new QaError(
+      'Viewer mode cannot change sites, scans, issues, or preflight runs.',
+      'FORBIDDEN',
+    );
 }
 async function siteFor(tx: Sql, workspace: string, id: string) {
   const rows = await tx.query<{ data: Site }>(
@@ -32,6 +42,7 @@ export class QaService {
   constructor(
     public db: Database,
     private liveTransport: Transport = publicTransport,
+    private preflightRunner = runPreflight,
   ) {}
   async initialize(workspace: string) {
     await this.db.transaction(async (tx) => {
@@ -116,7 +127,7 @@ export class QaService {
           )
         ).map((r) => r.data),
         scans: await tx.query<Scan>(
-          `SELECT ${scanSelect} FROM scans WHERE workspace_id=$1 ORDER BY created_at DESC,id LIMIT 100`,
+          `SELECT ${scanSelect} FROM scans WHERE workspace_id=$1 AND kind='WEBSITE' ORDER BY created_at DESC,id LIMIT 100`,
           [workspace],
         ),
         issues: (
@@ -179,7 +190,7 @@ export class QaService {
       if (site.mode === 'LIVE' && process.env.ENABLE_LIVE_SCANS !== 'true')
         throw new QaError('Live scanning is disabled on this server.');
       const active = await tx.query<Scan>(
-        `SELECT ${scanSelect} FROM scans WHERE workspace_id=$1 AND site_id=$2 AND status IN ('QUEUED','RUNNING')`,
+        `SELECT ${scanSelect} FROM scans WHERE workspace_id=$1 AND site_id=$2 AND kind='WEBSITE' AND status IN ('QUEUED','RUNNING')`,
         [workspace, siteId],
       );
       if (active.length) return active[0];
@@ -212,6 +223,12 @@ export class QaService {
     });
     if (!job) return false;
     try {
+      if (job.kind === 'PREFLIGHT') {
+        if (!job.input) throw new Error('Missing preflight input snapshot.');
+        const result = await this.preflightRunner(job.input);
+        await this.completePreflight(job.workspace, job.id, job.attempt, result);
+        return true;
+      }
       const site = await siteFor(this.db, job.workspace, job.siteId);
       if (site.mode === 'LIVE' && process.env.ENABLE_LIVE_SCANS !== 'true')
         throw new QaError('Live scans are disabled.');
@@ -240,9 +257,10 @@ export class QaService {
         `SELECT ${scanSelect} FROM scans WHERE workspace_id=$1 AND id=$2 FOR UPDATE`,
         [workspace, id],
       );
-      if (!scan || scan.status !== 'RUNNING' || scan.attempt !== attempt) return;
+      if (!scan || scan.kind !== 'WEBSITE' || scan.status !== 'RUNNING' || scan.attempt !== attempt)
+        return;
       const previous = await tx.query<{ result: ScanResult }>(
-        "SELECT result FROM scans WHERE workspace_id=$1 AND site_id=$2 AND status='COMPLETED' ORDER BY completed_at DESC LIMIT 1",
+        "SELECT result FROM scans WHERE workspace_id=$1 AND site_id=$2 AND kind='WEBSITE' AND status='COMPLETED' ORDER BY completed_at DESC LIMIT 1",
         [workspace, scan.siteId],
       );
       const before = new Set(previous[0]?.result.findings.map((f) => f.fingerprint) ?? []);
@@ -275,10 +293,77 @@ export class QaService {
         [workspace, id, JSON.stringify(result)],
       );
       await tx.query(
-        `DELETE FROM scans WHERE workspace_id=$1 AND site_id=$2 AND status IN ('COMPLETED','FAILED') AND id NOT IN (SELECT id FROM scans WHERE workspace_id=$1 AND site_id=$2 ORDER BY created_at DESC,id LIMIT 30)`,
+        `DELETE FROM scans WHERE workspace_id=$1 AND site_id=$2 AND kind='WEBSITE' AND status IN ('COMPLETED','FAILED') AND id NOT IN (SELECT id FROM scans WHERE workspace_id=$1 AND site_id=$2 AND kind='WEBSITE' ORDER BY created_at DESC,id LIMIT 30)`,
         [workspace, scan.siteId],
       );
     });
+  }
+  async preflightRuns(workspace: string): Promise<PreflightRun[]> {
+    return this.db.query<PreflightRun>(
+      `SELECT ${scanSelect} FROM scans WHERE workspace_id=$1 AND kind='PREFLIGHT' ORDER BY created_at DESC,id DESC LIMIT 30`,
+      [workspace],
+    );
+  }
+  async enqueuePreflight(workspace: string, role: Role, input: unknown) {
+    requireEditor(role);
+    const parsed = z
+      .object({
+        variant: z.enum(['BROKEN', 'FIXED']),
+        retryOf: z.string().uuid().nullable().optional(),
+      })
+      .strict()
+      .safeParse(input);
+    if (!parsed.success)
+      throw new QaError('Choose a supported fixture variant and valid retry ID.');
+    return this.db.transaction(async (tx) => {
+      await tx.query('SELECT id FROM workspaces WHERE id=$1 FOR UPDATE', [workspace]);
+      await siteFor(tx, workspace, 'northstar');
+      let snapshot: PreflightInput = {
+        variant: parsed.data.variant,
+        fixtureVersion: FIXTURE_VERSION,
+        retryOf: null,
+      };
+      if (parsed.data.retryOf) {
+        const [prior] = await tx.query<PreflightRun>(
+          `SELECT ${scanSelect} FROM scans WHERE workspace_id=$1 AND id=$2 AND kind='PREFLIGHT'`,
+          [workspace, parsed.data.retryOf],
+        );
+        if (!prior || prior.status !== 'FAILED')
+          throw new QaError('Only a failed run in this workspace can be retried.');
+        if (
+          prior.input.variant !== parsed.data.variant ||
+          prior.input.fixtureVersion !== FIXTURE_VERSION
+        )
+          throw new QaError('Retry must use the original available fixture.');
+        snapshot = { ...prior.input, retryOf: prior.id };
+      }
+      const [active] = await tx.query<PreflightRun>(
+        `SELECT ${scanSelect} FROM scans WHERE workspace_id=$1 AND kind='PREFLIGHT' AND status IN ('QUEUED','RUNNING')`,
+        [workspace],
+      );
+      if (active) {
+        if (active.input.variant !== snapshot.variant || active.input.retryOf !== snapshot.retryOf)
+          throw new QaError('A preflight is already active. Wait for it to finish.');
+        return active;
+      }
+      // Keep at most 30 runs, including the new job; never prune active work.
+      await tx.query(
+        `DELETE FROM scans WHERE workspace_id=$1 AND kind='PREFLIGHT' AND status IN ('COMPLETED','FAILED') AND id NOT IN (SELECT id FROM scans WHERE workspace_id=$1 AND kind='PREFLIGHT' ORDER BY created_at DESC,id DESC LIMIT 29)`,
+        [workspace],
+      );
+      return (
+        await tx.query<PreflightRun>(
+          `INSERT INTO scans(workspace_id,id,site_id,status,kind,input) VALUES($1,$2,'northstar','QUEUED','PREFLIGHT',$3::jsonb) RETURNING ${scanSelect}`,
+          [workspace, randomUUID(), JSON.stringify(snapshot)],
+        )
+      )[0];
+    });
+  }
+  async completePreflight(workspace: string, id: string, attempt: number, result: PreflightResult) {
+    await this.db.query(
+      `UPDATE scans SET status='COMPLETED',preflight=$4::jsonb,completed_at=now(),lease_until=null WHERE workspace_id=$1 AND id=$2 AND attempt=$3 AND status='RUNNING' AND kind='PREFLIGHT'`,
+      [workspace, id, attempt, JSON.stringify(result)],
+    );
   }
   async triage(workspace: string, role: Role, id: string, input: unknown) {
     requireEditor(role);

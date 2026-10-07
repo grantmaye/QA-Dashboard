@@ -123,6 +123,10 @@ export default function Dashboard() {
         </div>
         <p className="nav-label">WORKSPACE</p>
         <nav>
+          <a className="nav-item" href="/preflight">
+            <ArrowUpRight size={18} />
+            <span>Campaign preflight</span>
+          </a>
           {[
             ['Overview', Layers],
             ['Issues', ListChecks],
@@ -497,8 +501,9 @@ export default function Dashboard() {
                   <p>
                     The cookie isolates demo workspaces, but this is not authenticated multi-tenant
                     software. Add real sign-in, trusted membership checks, and abuse controls before
-                    a public production deployment. JavaScript is not executed; response timings are
-                    not Core Web Vitals.
+                    a public production deployment. Website scans do not execute JavaScript. The
+                    separate campaign preflight runs only checked-in fictional fixtures in Chromium;
+                    response timings are not Core Web Vitals.
                   </p>
                 </section>
               )}

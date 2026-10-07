@@ -33,3 +33,9 @@ There is no global request quota, workspace expiry task, issue archival, authent
 - Data appears new in another browser: workspaces are cookie-scoped. Clearing the cookie creates a new sample workspace; it does not erase the old database rows.
 
 Back up PostgreSQL normally for retained deployments. Local data can be reset by stopping the app and removing `.data/qa`; this permanently removes local demo workspaces. Health at GET /api/health checks database connectivity, not queue health or target website reachability.
+
+## Controlled campaign fixtures
+
+Campaign preflight is available at `/preflight`. It executes only the checked-in fictional fixture in a fresh Chromium context; callers choose a known variant, never a URL or script. Every page request is intercepted. The exact fixture navigation is fulfilled locally, analytics POSTs are recorded and fulfilled locally, and other requests are aborted. Service workers are disabled. No real form data or third-party analytics credentials are used.
+
+This adds browser execution only for trusted repository fixtures. It does not relax the existing live scanner's network policy and is not a sandbox for untrusted script execution. “Ready for review” is a computed fixture verdict, not an authorization or compliance decision. Owner/Member/Viewer remains a client-selected demo simulation. See [runner bounds, persistence, and production limitations](campaign-preflight.md).

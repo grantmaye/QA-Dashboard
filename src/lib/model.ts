@@ -1,3 +1,4 @@
+import type { PreflightInput, PreflightResult } from './preflight/model';
 export type Severity = 'HIGH' | 'MEDIUM' | 'LOW';
 export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'IGNORED';
 export type Role = 'OWNER' | 'MEMBER' | 'VIEWER';
@@ -29,6 +30,9 @@ export type Site = {
   createdAt: string;
 };
 export type Scan = {
+  kind: 'WEBSITE' | 'PREFLIGHT';
+  input: PreflightInput | null;
+  preflight: PreflightResult | null;
   id: string;
   siteId: string;
   status: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
