@@ -8,6 +8,18 @@ The default demo works offline against deliberately imperfect sample HTML. It ne
 
 ![Inspect dashboard with website cards and issue inbox](docs/images/dashboard.png)
 
+## Start here
+
+**Problem:** turn website check results into a repeatable review workflow without losing ownership and notes between scans.
+
+**Working flow:** scan fixture pages, inspect finding evidence, assign an owner, record a note, and compare later scan results.
+
+- [Run locally](#run-locally) and follow the [two-minute walkthrough](#a-two-minute-walkthrough).
+- Review the [scanner](src/lib/scanner.ts), [queue and triage service](src/lib/service.ts), and [architecture](docs/architecture.md).
+- Inspect [service and network-policy tests](tests/core.test.ts), [browser workflows](tests/e2e/dashboard.spec.ts), and the [owner-batching benchmark](scripts/benchmark.ts). [CI results](https://github.com/grantmaye/QA-Dashboard/actions/workflows/ci.yml) show the status of each run.
+
+**Scope:** bounded HTML checks, not a complete accessibility audit. Role selection is a demo simulation; live scanning is off by default. See [security and deployment boundaries](docs/security.md).
+
 ## Run locally
 
 Use Node.js 22 or newer.
