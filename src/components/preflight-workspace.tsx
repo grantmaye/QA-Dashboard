@@ -101,7 +101,6 @@ export default function PreflightWorkspace() {
       </header>
       <main className={styles.layout}>
         <aside className={styles.brief}>
-
           <h1>
             Before the
             <br />
@@ -118,7 +117,6 @@ export default function PreflightWorkspace() {
             </div>
           </div>
           <div className={styles.contract}>
-
             <p>
               Landing page <ArrowRight size={12} /> Signup <ArrowRight size={12} /> Conversion
             </p>
