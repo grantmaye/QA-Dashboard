@@ -8,6 +8,16 @@ The default demo works offline against deliberately imperfect sample HTML. It ne
 
 ![Inspect dashboard with website cards and issue inbox](docs/images/dashboard.png)
 
+## Campaign Release Preflight
+
+Inspect a fictional campaign before release: run broken and fixed landing pages in Chromium, check page-view/form/conversion payloads, and follow the evidence behind each blocked or ready-for-review verdict. Saved runs include consent-enabled and consent-disabled journeys, request timelines, gate findings, and a reproducibility receipt.
+
+![Campaign preflight with observed event evidence](docs/images/preflight-blocked.png)
+
+After `npm ci`, run `npx playwright install chromium`, start the app, and open [localhost:3000/preflight](http://localhost:3000/preflight). Choose **Broken fixture**, inspect its failures, then run **Fixed fixture** and compare the saved history. Chromium executes only the included fixture code; analytics requests are intercepted locally. No real campaign, visitor, or ad account is involved.
+
+See the [complete walkthrough, event contract, architecture and limits](docs/campaign-preflight.md), [real browser runner](src/lib/preflight/runner.ts), and [failure/retry tests](tests/preflight.test.ts). A passing verdict is local evidence for review, not production release approval or a compliance certification. The original website scanner remains available at `/`.
+
 ## Start here
 
 **Problem:** turn website check results into a repeatable review workflow without losing ownership and notes between scans.
@@ -130,6 +140,7 @@ npm run format:check
 npm run benchmark
 npm run build
 npx playwright install chromium
+npm run test:preflight
 npm run test:e2e
 ```
 
