@@ -10,7 +10,7 @@ TypeScript checks code at build time. Zod validates untrusted mutation input at 
 
 ## Job lifecycle
 
-A scan mutation inserts QUEUED in a transaction, then returns. A partial unique index allows one active scan per site. Repeated enqueue while active returns that job; it is not a general idempotency-key implementation.
+A scan mutation inserts QUEUED in a transaction, then returns. A partial unique index allows one active job per workspace, site, and kind; the service additionally permits only one active preflight per workspace. Repeated enqueue while active returns that job; it is not a general idempotency-key implementation.
 
 A runner claims one queued or expired job in a short transaction with SKIP LOCKED, increments the attempt, and grants a two-minute lease. Network work happens outside the transaction. Completion locks the workspace and scan, checks status and attempt, upserts findings, and commits the result atomically. A delayed worker with an old attempt cannot publish results over a newer claim. Jobs that exhaust expired leases fail visibly.
 

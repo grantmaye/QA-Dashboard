@@ -18,6 +18,10 @@ After `npm ci`, run `npx playwright install chromium`, start the app, and open [
 
 See the [complete walkthrough, event contract, architecture and limits](docs/campaign-preflight.md), [real browser runner](src/lib/preflight/runner.ts), and [failure/retry tests](tests/preflight.test.ts). A passing verdict is local evidence for review, not production release approval or a compliance certification. The original website scanner remains available at `/`.
 
+## Learn the system
+
+Read the [technical manual](docs/technical-manual.md) for request traces, queue invariants, scanner safeguards, failure labs, exercises with answers, and interview preparation. The [product story](docs/product-story.md) explains a clearly labeled fictional scenario, who benefits, and the limits of the current software.
+
 ## Start here
 
 **Problem:** turn website check results into a repeatable review workflow without losing ownership and notes between scans.
@@ -32,7 +36,7 @@ See the [complete walkthrough, event contract, architecture and limits](docs/cam
 
 ## Run locally
 
-Use Node.js 22 or newer.
+Use Node.js 22.13 or newer.
 
 ```sh
 npm ci
