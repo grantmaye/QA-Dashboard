@@ -121,7 +121,7 @@ export default function Dashboard() {
           </div>
           <ChevronRight size={15} />
         </div>
-        <p className="nav-label">WORKSPACE</p>
+
         <nav>
           <a className="nav-item" href="/preflight">
             <ArrowUpRight size={18} />
@@ -180,7 +180,6 @@ export default function Dashboard() {
         <main>
           <div className="page-heading">
             <div>
-              <div className="eyebrow">WEBSITE QUALITY, IN ONE PLACE</div>
               <h1>{tab}</h1>
               <p>Catch the small things before your visitors do.</p>
             </div>
@@ -529,7 +528,7 @@ export default function Dashboard() {
             <button className="close" aria-label="Close issue" onClick={() => setSelected(null)}>
               <X size={20} />
             </button>
-            <div className="eyebrow">ISSUE DETAILS</div>
+
             <h2>{selected.title}</h2>
             {error && (
               <p role="alert" className="error">

@@ -101,7 +101,7 @@ export default function PreflightWorkspace() {
       </header>
       <main className={styles.layout}>
         <aside className={styles.brief}>
-          <div className={styles.index}>RELEASE FILE / 001</div>
+
           <h1>
             Before the
             <br />
@@ -118,7 +118,7 @@ export default function PreflightWorkspace() {
             </div>
           </div>
           <div className={styles.contract}>
-            <span>THE JOURNEY</span>
+
             <p>
               Landing page <ArrowRight size={12} /> Signup <ArrowRight size={12} /> Conversion
             </p>
@@ -192,7 +192,6 @@ export default function PreflightWorkspace() {
         <section className={styles.review} aria-label="Release evidence">
           <div className={styles.reviewHeading}>
             <div>
-              <span className={styles.kicker}>RELEASE INSPECTION</span>
               <h2>Evidence before approval.</h2>
             </div>
             <button
