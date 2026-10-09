@@ -218,7 +218,7 @@ test('durable preflight shares the queue while preserving website jobs; failures
       {
         query: '{ preflightRuns { id input { variant } preflight { verdict gates { passed } } } }',
       },
-      { contextValue: contextFor(service, workspace) },
+      { contextValue: contextFor(service, workspace, 'OWNER') },
     );
     if (read.body.kind === 'single') {
       assert.equal(read.body.singleResult.errors, undefined);

@@ -4,7 +4,7 @@
 
 A small website quality workflow: scan a site, inspect the evidence, assign a finding, and track it across later scans. Built with **Next.js, TypeScript, Node.js, Apollo GraphQL, and PostgreSQL**.
 
-The default demo works offline against deliberately imperfect sample HTML. It needs no API keys or database account. Sample scan history is seeded demonstration data, not historical monitoring of real businesses.
+The explicitly configured local demo works offline against deliberately imperfect sample HTML. It needs no API keys or database account. Sample scan history is seeded demonstration data, not historical monitoring of real businesses.
 
 ![Inspect dashboard with website cards and issue inbox](docs/images/dashboard.png)
 
@@ -36,16 +36,17 @@ Use Node.js 22 or newer.
 
 ```sh
 npm ci
-npm run dev
+cp .env.example .env.local
+npm run dev -- --hostname 127.0.0.1
 ```
 
 Open http://localhost:3000. Embedded PGlite stores data in `.data/qa`. The first request creates a cookie-scoped workspace with three fictional sites, six sample scans, and 30 findings. The browser stores only the workspace cookie; the actual data lives in the database.
 
-For a production build:
+For a production build of the same trusted-local demo (the build type does not imply hosted deployment):
 
 ```sh
 npm run build
-npm start
+npm start -- --hostname 127.0.0.1
 ```
 
 ## A two-minute walkthrough
@@ -118,6 +119,7 @@ docker compose up -d
 Set `DATABASE_URL=postgres://qa:qa@localhost:5432/qa` in `.env.local` for Next.js. Start the worker in a second terminal with its environment explicitly set:
 
 ```sh
+QA_IDENTITY_MODE=demo QA_DEPLOYMENT_MODE=local \
 DATABASE_URL=postgres://qa:qa@localhost:5432/qa npm run worker
 ```
 
@@ -129,7 +131,7 @@ Copy `.env.example` to `.env.local` and set `ENABLE_LIVE_SCANS=true`; restart Ne
 
 The crawler respects robots exclusions, visits at most eight URLs, follows only same-origin query-free links, caps response bodies at 1 MiB, bounds DNS and HTTP waits, and rejects private/reserved addresses. DNS results are validated and pinned to the socket; redirects are checked again. Cross-origin redirects fail with an explanation. Use the destination URL directly.
 
-**Deployment boundary:** role selection is a simulation, not authentication. The unsigned random cookie provides demo separation, not verified membership. Live mode is off by default. Before exposing this to untrusted users, add sign-in, trusted membership checks, rate limits, storage quotas, worker monitoring, and network egress restrictions. See [security and operations](docs/security.md).
+**Deployment boundary:** missing or invalid `QA_IDENTITY_MODE` / `QA_DEPLOYMENT_MODE` rejects GraphQL with HTTP 503. Only explicit `demo` + `local` accepts simulated roles and unsigned workspace cookies. `hosted` requires `authenticated` and an HTTPS `APP_ORIGIN`; the server identity adapter is intentionally unimplemented, so authenticated mode returns 401 before database access. This guard does not provide sign-in or verified membership. Live scanning remains an opt-in trusted-local capability. Customer hosting still requires the real identity adapter, rate limits, storage quotas, worker monitoring, and network egress restrictions. See [security and operations](docs/security.md).
 
 ## Verification
 
@@ -139,12 +141,13 @@ npm run typecheck
 npm run format:check
 npm run benchmark
 npm run build
+npm run test:identity-http
 npx playwright install chromium
 npm run test:preflight
 npm run test:e2e
 ```
 
-CI runs the service tests against both embedded PGlite and PostgreSQL, then builds the app and runs desktop/mobile Playwright workflows. Screenshots and failure traces are retained as workflow artifacts. The tests cover network address validation, fixture checks, robots exclusions, triage persistence, workspace isolation, duplicate enqueue, stale completion fencing, pagination, and owner batching.
+CI runs service and identity-boundary tests against both embedded PGlite and PostgreSQL, builds the app, checks four fail-closed configurations against the actual Next HTTP route, and runs desktop/mobile Playwright workflows in explicit local demo mode. Screenshots and failure traces are retained as workflow artifacts. The tests cover network address validation, fixture checks, robots exclusions, triage persistence, workspace isolation, duplicate enqueue, stale completion fencing, pagination, and owner batching.
 
 Measured locally with 30 assigned issues: **30 owner queries without batching, 1 with DataLoader**. This measures the owner lookup portion, not total request queries or production throughput. Timing is printed for context and is not a performance guarantee.
 

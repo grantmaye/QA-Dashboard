@@ -18,7 +18,8 @@
     "test:e2e": "playwright test",
     "benchmark": "node --import tsx scripts/benchmark.ts",
     "worker": "node --import tsx scripts/worker.ts",
-    "test:preflight": "node --import tsx --test tests/preflight.browser.ts"
+    "test:preflight": "node --import tsx --test tests/preflight.browser.ts",
+    "test:identity-http": "node --import tsx --test --test-concurrency=1 tests/identity.http.ts"
   },
   "dependencies": {
     "@apollo/server": "^5.5.1",

@@ -1,5 +1,7 @@
 import { getDatabase } from '../src/lib/database';
 import { QaService } from '../src/lib/service';
+import { identityConfig } from '../src/lib/identity';
+identityConfig(process.env);
 if (!process.env.DATABASE_URL)
   throw new Error('A separate worker requires DATABASE_URL. Embedded mode uses the in-app runner.');
 const db = await getDatabase();

@@ -24,7 +24,7 @@ import { scanWebsite } from './scanner';
 import { demoTransport } from './fixtures';
 const scanSelect = `id,site_id AS "siteId",status,created_at::text AS "createdAt",completed_at::text AS "completedAt",result,error,attempt,kind,input,preflight`;
 export function requireEditor(role: Role) {
-  if (role === 'VIEWER')
+  if (role !== 'OWNER' && role !== 'MEMBER')
     throw new QaError(
       'Viewer mode cannot change sites, scans, issues, or preflight runs.',
       'FORBIDDEN',
@@ -207,7 +207,8 @@ export class QaService {
     const job = await this.db.transaction(async (tx) => {
       // Only expired leases are retried. The attempt number fences stale workers.
       await tx.query(
-        "UPDATE scans SET status='FAILED',error='Worker lease expired after three attempts.',completed_at=now() WHERE status='RUNNING' AND lease_until<now() AND attempt>=3",
+        `UPDATE scans SET status='FAILED',error='Worker lease expired after three attempts.',completed_at=now() WHERE status='RUNNING' AND lease_until<now() AND attempt>=3 ${workspace ? 'AND workspace_id=$1' : ''}`,
+        workspace ? [workspace] : [],
       );
       const rows = await tx.query<Scan & { workspace: string }>(
         `SELECT ${scanSelect},workspace_id AS workspace FROM scans WHERE (status='QUEUED' OR (status='RUNNING' AND lease_until<now() AND attempt<3)) ${workspace ? 'AND workspace_id=$1' : ''} ORDER BY created_at FOR UPDATE SKIP LOCKED LIMIT 1`,
