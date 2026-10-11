@@ -44,7 +44,7 @@ export type Context = {
 export function contextFor(
   service: QaService,
   workspace: string,
-  role: Role = 'OWNER',
+  role: Role,
   naive = false,
 ): Context {
   const metrics = { memberQueries: 0 };

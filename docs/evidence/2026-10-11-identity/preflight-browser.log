@@ -1,0 +1,18 @@
+
+> qa-dashboard@1.0.0 test:preflight
+> node --import tsx --test tests/preflight.browser.ts
+
+✔ real Chromium observes broken and fixed landing-page journeys without external collection (2514.550577ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3262.738226
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

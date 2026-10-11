@@ -12,8 +12,9 @@ Use the repository's Node.js version and existing local setup:
 
 ```sh
 npm ci
+cp .env.example .env.local
 npx playwright install chromium
-npm run dev
+npm run dev -- --hostname 127.0.0.1
 ```
 
 Open [localhost:3000/preflight](http://localhost:3000/preflight), or choose **Campaign preflight** from Inspect. On Linux, `npx playwright install --with-deps chromium` can install the required system libraries. The browser installation requires network access; fixture execution does not need analytics services or credentials.

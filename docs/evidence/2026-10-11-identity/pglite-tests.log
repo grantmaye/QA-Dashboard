@@ -1,0 +1,31 @@
+
+> qa-dashboard@1.0.0 test
+> node --import tsx --test --test-concurrency=1 tests/*.test.ts
+
+✔ network policy rejects private, mapped, reserved, credentials and alternate ports (2.933959ms)
+✔ HTML checks distinguish decorative alt from absent alt (6.786131ms)
+✔ sample crawler is deterministic and checks discovered 404 (16.282374ms)
+✔ robots exclusion is respected (2.209287ms)
+✔ persistent workflow, isolation, leases, permissions, pagination and batching (1843.163156ms)
+✔ configuration fails closed, while explicit local demo is independent of production builds (1.516914ms)
+✔ missing principal, membership, config and verifier failures reject at HTTP boundary before SQL/body/runner (71.971603ms)
+✔ demo hints only resolve in explicit demo mode; authenticated identity ignores spoofed cookie and role (1.254299ms)
+✔ explicit demo preserves Viewer rejection and sets bounded HttpOnly Strict cookies with trusted HTTPS detection (1748.771549ms)
+✔ two trusted principals cannot cross-read, triage, enqueue, preflight, retry or expire another workspace through HTTP context (1441.185511ms)
+✔ a warmed authenticated handler re-verifies revoked sessions and memberships before body, SQL or scheduling (1230.249654ms)
+✔ evidence rejects missing, duplicate, misordered, malformed, unconsented and unattributed events (6.062792ms)
+✔ durable preflight shares the queue while preserving website jobs; failures, retries, isolation and fencing (2075.651055ms)
+✔ existing website data survives the additive queue upgrade (1326.71265ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12681.049024
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

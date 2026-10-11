@@ -2,7 +2,7 @@
 
 ## Request flow
 
-The client sends one typed GraphQL operation to a Next.js Node route. The route resolves a random workspace cookie and simulated role. Apollo validates the operation, resolvers call QaService, and the service validates business inputs before parameterized SQL runs. Errors can arrive with HTTP 200 under GraphQL; the client checks the errors array as well as the HTTP status.
+The client sends one typed GraphQL operation to a Next.js Node route. The route delegates to `graphql-http.ts`, which validates explicit deployment/identity configuration and resolves identity through `identity.ts` before opening SQL. Only local demo mode reads the random workspace cookie and simulated role. Authenticated mode accepts only an in-process verifier result with a trusted selected workspace/membership; the current default verifier returns no principal and therefore HTTP 401. It never seeds demo data or falls back to demo. Apollo validates the operation, resolvers call QaService, and the service validates business inputs before parameterized SQL runs. Errors can arrive with HTTP 200 under GraphQL; the client checks the errors array as well as the HTTP status.
 
 GraphQL is useful here because the screen combines related sites, scans, issues, and owners. REST could also implement this application. GraphQL offers a selectable typed graph; it does not itself provide authentication, caching, SQL efficiency, or a job queue.
 
@@ -12,7 +12,7 @@ TypeScript checks code at build time. Zod validates untrusted mutation input at 
 
 A scan mutation inserts QUEUED in a transaction, then returns. A partial unique index allows one active scan per site. Repeated enqueue while active returns that job; it is not a general idempotency-key implementation.
 
-A runner claims one queued or expired job in a short transaction with SKIP LOCKED, increments the attempt, and grants a two-minute lease. Network work happens outside the transaction. Completion locks the workspace and scan, checks status and attempt, upserts findings, and commits the result atomically. A delayed worker with an old attempt cannot publish results over a newer claim. Jobs that exhaust expired leases fail visibly.
+A runner claims one queued or expired job in a short transaction with SKIP LOCKED, increments the attempt, and grants a two-minute lease. Network work happens outside the transaction. Completion locks the workspace and scan, checks status and attempt, upserts findings, and commits the result atomically. A delayed worker with an old attempt cannot publish results over a newer claim. Jobs that exhaust expired leases fail visibly. Both lease expiry and job claims are scoped to the resolved workspace for the request runner; only the explicitly separate worker operates globally.
 
 Local after() execution is best effort. Later GraphQL requests can resume the queue; an external PostgreSQL worker provides independent polling. There is no guarantee that a serverless host keeps background work alive. The scan deadline is checked between requests, so an in-flight request can exceed the nominal 35-second crawl budget. DNS has a two-second timeout, each HTTP request has five seconds, and redirect chains are additionally bounded. The lease is longer than the bounded scan.
 

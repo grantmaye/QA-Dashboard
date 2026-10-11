@@ -124,7 +124,7 @@ test('persistent workflow, isolation, leases, permissions, pagination and batchi
       if (result.body.kind === 'single') assert.equal(result.body.singleResult.errors, undefined);
       assert.equal(c.metrics.memberQueries, naive ? 30 : 1);
     }
-    const c = contextFor(service, workspace);
+    const c = contextFor(service, workspace, 'OWNER');
     const result = await api.executeOperation(
       { query: '{ issues(first: 2) { edges { cursor node { id } } pageInfo { hasNextPage } } }' },
       { contextValue: c },

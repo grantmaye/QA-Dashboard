@@ -1,0 +1,21 @@
+✔ network policy rejects private, mapped, reserved, credentials and alternate ports (3.157556ms)
+✔ HTML checks distinguish decorative alt from absent alt (8.224928ms)
+✔ sample crawler is deterministic and checks discovered 404 (16.999584ms)
+✔ robots exclusion is respected (2.364251ms)
+✔ persistent workflow, isolation, leases, permissions, pagination and batching (1846.751559ms)
+✔ configuration fails closed, while explicit local demo is independent of production builds (2.056498ms)
+✔ missing principal, membership, config and verifier failures reject at HTTP boundary before SQL/body/runner (76.496894ms)
+✔ demo hints only resolve in explicit demo mode; authenticated identity ignores spoofed cookie and role (1.417144ms)
+✔ explicit demo preserves Viewer rejection and sets bounded HttpOnly Strict cookies with trusted HTTPS detection (1742.203303ms)
+✔ two trusted principals cannot cross-read, triage, enqueue, preflight, retry or expire another workspace through HTTP context (1408.776662ms)
+✔ evidence rejects missing, duplicate, misordered, malformed, unconsented and unattributed events (7.242509ms)
+✔ durable preflight shares the queue while preserving website jobs; failures, retries, isolation and fencing (2167.47372ms)
+✔ existing website data survives the additive queue upgrade (1453.95807ms)
+ℹ tests 13
+ℹ suites 0
+ℹ pass 13
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 11599.406893
