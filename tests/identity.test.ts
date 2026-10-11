@@ -358,3 +358,123 @@ test('two trusted principals cannot cross-read, triage, enqueue, preflight, retr
     await db.close();
   }
 });
+
+test('a warmed authenticated handler re-verifies revoked sessions and memberships before body, SQL or scheduling', async (t) => {
+  const db = await createDatabase(process.env.TEST_DATABASE_URL);
+  await migrate(db);
+  const service = new QaService(db);
+  const api = createApi();
+  const workspace = randomUUID();
+  await service.initialize(workspace);
+  service.initialize = async () => {
+    throw new Error('Authenticated requests must never seed');
+  };
+  const sql = t.mock.method(db, 'query');
+  let verified: VerifiedPrincipal | null = principal(workspace);
+  let unavailable = false;
+  let verifiedRequests = 0;
+  let opened = 0;
+  let scheduled = 0;
+  const post = createGraphqlPost({
+    api,
+    env: () => localAuth,
+    verify: async () => {
+      verifiedRequests++;
+      if (unavailable) throw new Error('private-revocation-provider-detail');
+      return verified;
+    },
+    makeService: async () => {
+      opened++;
+      return service;
+    },
+    schedule: () => {
+      scheduled++;
+    },
+  });
+  const forged = {
+    cookie: `qa-workspace=${workspace}`,
+    'x-demo-role': 'OWNER',
+    authorization: 'Bearer previously-accepted-is-not-authority',
+  };
+  try {
+    const accepted = await post(request('{ currentRole }', forged));
+    assert.equal(accepted.status, 200);
+    assert.equal((await accepted.json()).data.currentRole, 'OWNER');
+    assert.equal(opened, 1);
+    assert.equal(scheduled, 1);
+    const acceptedSqlCalls = sql.mock.callCount();
+    assert.ok(acceptedSqlCalls > 0);
+    const cases: Array<{ name: string; verified: VerifiedPrincipal | null; status: number }> = [
+      { name: 'session revoked', verified: null, status: 401 },
+      {
+        name: 'membership removed',
+        verified: { ...principal(workspace), memberships: [] },
+        status: 403,
+      },
+      {
+        name: 'active workspace no longer granted',
+        verified: { ...principal(workspace), memberships: principal(randomUUID()).memberships },
+        status: 403,
+      },
+      {
+        name: 'conflicting membership returned',
+        verified: {
+          ...principal(workspace),
+          memberships: [
+            ...principal(workspace, 'OWNER').memberships,
+            ...principal(workspace, 'VIEWER').memberships,
+          ],
+        },
+        status: 403,
+      },
+    ];
+    for (const scenario of cases) {
+      verified = scenario.verified;
+      for (const query of [
+        '{ dashboard { sites { id } } }',
+        'mutation { startScan(siteId:"northstar") { id } }',
+      ]) {
+        const req = request(query, forged);
+        const response = await post(req);
+        assert.equal(response.status, scenario.status, scenario.name);
+        assert.equal(req.bodyUsed, false, scenario.name);
+        assert.equal(response.headers.get('cache-control'), 'no-store');
+        assert.equal(response.headers.get('set-cookie'), null);
+        assert.ok(!(await response.text()).includes(workspace));
+        assert.equal(opened, 1, 'Revocation must be checked before reopening SQL');
+        assert.equal(
+          sql.mock.callCount(),
+          acceptedSqlCalls,
+          'Revocation must precede every SQL query',
+        );
+        assert.equal(scheduled, 1, 'Revoked requests must not schedule a worker');
+      }
+    }
+    // A provider outage after an accepted request must not fall back to its old principal.
+    verified = principal(workspace);
+    unavailable = true;
+    const unavailableRequest = request('{ currentRole }', forged);
+    const outage = await post(unavailableRequest);
+    assert.equal(outage.status, 503);
+    assert.equal(unavailableRequest.bodyUsed, false);
+    assert.equal(outage.headers.get('cache-control'), 'no-store');
+    assert.equal(outage.headers.get('set-cookie'), null);
+    assert.ok(!(await outage.text()).includes('private-revocation-provider-detail'));
+    assert.equal(opened, 1);
+    assert.equal(scheduled, 1);
+    assert.equal(sql.mock.callCount(), acceptedSqlCalls);
+    // Recovery must use the newly verified role, not the OWNER context that warmed Apollo.
+    unavailable = false;
+    verified = principal(workspace, 'VIEWER');
+    const recovered = await post(request('{ currentRole }', forged));
+    assert.equal((await recovered.json()).data.currentRole, 'VIEWER');
+    const mutation = await post(
+      request('mutation { startScan(siteId:"northstar") { id } }', forged),
+    );
+    assert.equal((await mutation.json()).errors[0].extensions.code, 'FORBIDDEN');
+    assert.equal(verifiedRequests, 12, 'The verifier must run once for every request');
+  } finally {
+    await api.stop();
+    await db.close();
+  }
+});

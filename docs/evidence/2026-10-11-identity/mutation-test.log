@@ -1,0 +1,28 @@
+✖ a warmed authenticated handler re-verifies revoked sessions and memberships before body, SQL or scheduling (1675.20386ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2668.881749
+
+✖ failing tests:
+
+test at tests/identity.test.ts:1:11094
+✖ a warmed authenticated handler re-verifies revoked sessions and memberships before body, SQL or scheduling (1675.20386ms)
+  AssertionError [ERR_ASSERTION]: session revoked
+  
+  200 !== 401
+  
+      at TestContext.<anonymous> (/workspace/scratch/qa-readiness-2026-10-11/cached-principal-mutant/tests/identity.test.ts:439:16)
+      at async Test.run (node:internal/test_runner/test:1389:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 401,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

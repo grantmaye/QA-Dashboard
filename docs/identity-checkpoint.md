@@ -1,3 +1,5 @@
+> October 11 adds a test-only [warmed-handler revocation regression and readiness record](identity-readiness-2026-10-11.md). The October 9 implementation and historical verification below remain unchanged.
+
 # Identity boundary checkpoint — 9 October 2026
 
 Branch: `codex/harden-demo-identity-boundary`, based on freshly fetched main `8d8c9ba35c0f459bb08e2d90cff3d74c7dd91a25`.

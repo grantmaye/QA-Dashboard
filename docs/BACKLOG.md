@@ -4,6 +4,10 @@
 
 The demo identity boundary now fails closed outside explicit local demo mode, with server principal/membership integration seams, role/cookie spoofing coverage, and request-worker workspace isolation. See [identity checkpoint](identity-checkpoint.md) and [security model](security.md). Production authentication remains unimplemented; the authenticated adapter returns no principal.
 
+## October 11 regression coverage
+
+A warmed-handler revocation regression now guards against reusing previously successful authority after session/membership loss or verifier failure. A scratch-only stale-principal fallback passes the old thirteen tests and is caught by the new test. See [readiness evidence and remaining provider gates](identity-readiness-2026-10-11.md). No authentication implementation was added.
+
 ## Next QA work
 
 - Implement a reviewed provider adapter, verified membership/session expiry and authenticated provisioning only in a separately authorized production-auth slice. Do not use demo cookies/headers or decode-only tokens as authority.

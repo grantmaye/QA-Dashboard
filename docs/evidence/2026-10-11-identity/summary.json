@@ -1,0 +1,24 @@
+{
+  "baseCommit": "c7b3ed6e0cfc89fa27b389d6d54d5339a298546c",
+  "scope": "Test and documentation only; no application authentication change",
+  "pgliteTestsPassed": 14,
+  "builtNextHttpTestsPassed": 4,
+  "controlledBrowserTestsPassed": 1,
+  "desktopMobileWorkflowTestsPassed": 6,
+  "format": "passed",
+  "typecheck": "passed",
+  "build": "passed",
+  "localExternalPostgres": "unrun; no existing runtime located",
+  "isolatedFaultInjection": {
+    "mutation": "Fall back to last non-null verified principal when a later verifier returns null or throws; isolated scratch copy only",
+    "baselineCommit": "c7b3ed6e0cfc89fa27b389d6d54d5339a298546c",
+    "existingTests": "13 pre-existing tests pass with this deliberate defect",
+    "newTestExpectedRejection": "401 after session revocation",
+    "mutantActual": "200 from stale OWNER fallback",
+    "newTestDetectedAdditionalRegression": true,
+    "productionSourceChanged": false,
+    "existingTestExitCode": 0,
+    "newTestExitCode": 1
+  },
+  "productionProvider": "unimplemented; default verifier returns null"
+}

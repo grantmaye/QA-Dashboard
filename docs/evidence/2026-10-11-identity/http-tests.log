@@ -1,0 +1,21 @@
+
+> qa-dashboard@1.0.0 test:identity-http
+> node --import tsx --test --test-concurrency=1 tests/identity.http.ts
+
+✔ built Next HTTP route fails closed: missing configuration (825.976486ms)
+✔ built Next HTTP route fails closed: authenticated without a provider (800.079775ms)
+✔ built Next HTTP route fails closed: hosted demo with live scans (777.20606ms)
+✔ built Next HTTP route fails closed: hosted authenticated without a provider (757.471777ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3334.794914
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
